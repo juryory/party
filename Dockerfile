@@ -1,4 +1,4 @@
-FROM node:20-bookworm-slim
+FROM node:22-bookworm-slim
 
 # python3/build-essential/pip: mediasoup 预编译二进制下载失败时可从源码编译（国内网络兜底）
 RUN apt-get update \
@@ -7,8 +7,8 @@ RUN apt-get update \
 
 WORKDIR /app
 
-COPY package.json package-lock.json* ./
-RUN npm install --registry=https://registry.npmmirror.com
+COPY package.json package-lock.json ./
+RUN npm ci --registry=https://registry.npmmirror.com
 
 COPY . .
 RUN npm run build
