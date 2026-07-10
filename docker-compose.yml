@@ -1,0 +1,12 @@
+services:
+  party-share:
+    build: .
+    network_mode: host          # UDP 端口段直通宿主机，避免逐个映射
+    restart: unless-stopped
+    environment:
+      - PORT=8100
+      - BIND=127.0.0.1          # 网页/信令只监听本机，经 Cloudflare Tunnel 暴露
+      - ANNOUNCED_IP=你的服务器公网IP
+      - RTC_MIN_PORT=40000
+      - RTC_MAX_PORT=40099
+      - APP_PASSWORD=换成你们的访问密码

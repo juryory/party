@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Party</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #111214;
+    --surface: #1e1f22;
+    --surface-raised: #2b2d31;
+    --surface-hover: #35373c;
+    --border: #3f4147;
+    --text: #f2f3f5;
+    --muted: #b5bac1;
+    --dim: #80848e;
+    --accent: #5865f2;
+    --green: #23a559;
+    --danger: #da373c;
+    --sidebar-width: 264px;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; }
+  body {
+    font-family: Inter, system-ui, "Microsoft YaHei", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+  }
+  button, input, select { font: inherit; }
+  button { color: inherit; }
+  #login {
+    width: min(360px, calc(100vw - 32px));
+    margin: 12vh auto 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 28px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    box-shadow: 0 16px 48px rgba(0, 0, 0, .38);
+  }
+  #login h1 { font-size: 22px; text-align: center; }
+  #login p { color: var(--muted); font-size: 13px; text-align: center; margin-bottom: 4px; }
+  input, select {
+    min-width: 0;
+    height: 36px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    outline: none;
+    background: var(--bg);
+    color: var(--text);
+  }
+  input { padding: 0 11px; }
+  select { padding: 0 30px 0 9px; }
+  input:focus, select:focus { border-color: var(--accent); }
+  button {
+    min-height: 36px;
+    border: 0;
+    border-radius: 4px;
+    padding: 0 14px;
+    cursor: pointer;
+    background: var(--surface-hover);
+  }
+  button:hover { background: #404249; }
+  button:focus-visible { outline: 2px solid var(--text); outline-offset: 2px; }
+  button:disabled { opacity: .45; cursor: default; }
+  #joinBtn { background: var(--accent); font-weight: 700; }
+  #joinBtn:hover { background: #4752c4; }
+  #loginStatus { min-height: 18px; color: #fa777c; font-size: 13px; text-align: center; }
+
+  #main {
+    display: none;
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    grid-template-rows: 48px minmax(0, 1fr) auto 26px;
+    overflow: hidden;
+  }
+  #roomHeader {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+    padding: 0 16px;
+    border-bottom: 1px solid #0b0c0d;
+    background: var(--surface-raised);
+    box-shadow: 0 1px 0 rgba(0, 0, 0, .25);
+  }
+  .room-mark { color: var(--dim); font-size: 22px; font-weight: 500; }
+  #roomTitle { overflow: hidden; font-weight: 700; text-overflow: ellipsis; white-space: nowrap; }
+  #roomCount { margin-left: auto; color: var(--muted); font-size: 13px; }
+  #workspace { display: grid; grid-template-columns: minmax(0, 1fr) var(--sidebar-width); min-height: 0; }
+  #stage {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--bg);
+  }
+  #videos {
+    --grid-cols: 1;
+    --grid-rows: 1;
+    width: 100%;
+    height: 100%;
+    display: grid;
+    grid-template-columns: repeat(var(--grid-cols), minmax(0, 1fr));
+    grid-template-rows: repeat(var(--grid-rows), minmax(0, 1fr));
+    gap: 10px;
+    padding: 12px;
+    overflow: hidden;
+  }
+  .tile {
+    position: relative;
+    min-width: 0;
+    min-height: 0;
+    overflow: hidden;
+    border: 1px solid #24262a;
+    border-radius: 8px;
+    background: #050505;
+  }
+  .tile video { display: block; width: 100%; height: 100%; object-fit: contain; }
+  .tile .label {
+    position: absolute;
+    left: 8px;
+    bottom: 8px;
+    max-width: calc(100% - 16px);
+    overflow: hidden;
+    padding: 4px 8px;
+    border-radius: 4px;
+    background: rgba(17, 18, 20, .82);
+    font-size: 12px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .tile.mine { border-color: var(--accent); }
+  .tile.is-hidden { display: none; }
+  #emptyStage {
+    position: absolute;
+    inset: 0;
+    display: none;
+    place-content: center;
+    gap: 8px;
+    text-align: center;
+    color: var(--muted);
+    pointer-events: none;
+  }
+  #emptyStage strong { color: var(--text); font-size: 16px; }
+  #emptyStage span { font-size: 13px; }
+  #membersPanel {
+    min-width: 0;
+    overflow: hidden;
+    border-left: 1px solid #0b0c0d;
+    background: var(--surface);
+  }
+  .panel-title {
+    height: 38px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+  #memberList { height: calc(100% - 38px); overflow-y: auto; padding: 0 8px 12px; }
+  .member {
+    width: 100%;
+    height: 44px;
+    display: grid;
+    grid-template-columns: 30px minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 9px;
+    padding: 0 8px;
+    border-radius: 4px;
+    color: var(--muted);
+    text-align: left;
+    background: transparent;
+  }
+  .member:hover { color: var(--text); background: var(--surface-hover); }
+  .member.selected { color: var(--text); background: #404249; }
+  .avatar {
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #3b3d43;
+    color: var(--text);
+    font-size: 12px;
+    font-weight: 800;
+  }
+  .member-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .media-flags { display: flex; gap: 5px; color: var(--dim); font-size: 12px; }
+  .media-flags .active { color: var(--green); }
+
+  #toolbar {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-top: 1px solid #0b0c0d;
+    background: var(--surface-raised);
+  }
+  .device-control {
+    min-width: 0;
+    display: grid;
+    grid-template-columns: auto minmax(110px, 180px);
+    grid-template-areas: "button select" "meter meter";
+    gap: 5px 7px;
+  }
+  .device-control > button { grid-area: button; }
+  .device-control > select { grid-area: select; }
+  #micMeter {
+    grid-area: meter;
+    width: 100%;
+    height: 4px;
+    overflow: hidden;
+    border-radius: 2px;
+    background: #111214;
+  }
+  #micLevel { width: 0%; height: 100%; background: var(--green); transition: width 70ms linear; }
+  #toolbar button.on { background: var(--green); }
+  #toolbar button.on:hover { background: #1a8748; }
+  #screenBtn { flex: 0 0 auto; }
+  #leaveBtn { flex: 0 0 auto; background: var(--danger); }
+  #leaveBtn:hover { background: #a1282c; }
+  #status {
+    overflow: hidden;
+    padding: 4px 12px;
+    background: var(--surface-raised);
+    color: var(--muted);
+    font-size: 12px;
+    line-height: 18px;
+    text-align: center;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  #status.error { color: #fa777c; }
+
+  @media (max-width: 820px) {
+    :root { --sidebar-width: 190px; }
+    #toolbar { flex-wrap: wrap; }
+    .device-control { grid-template-columns: auto 130px; }
+  }
+  @media (max-width: 620px) {
+    #main { grid-template-rows: 44px minmax(0, 1fr) auto 24px; }
+    #workspace { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(0, 1fr) 118px; }
+    #membersPanel { border-top: 1px solid #0b0c0d; border-left: 0; }
+    .panel-title { height: 28px; }
+    #memberList {
+      height: 90px;
+      display: flex;
+      gap: 4px;
+      overflow-x: auto;
+      overflow-y: hidden;
+      padding: 4px 8px 8px;
+    }
+    .member { width: 146px; min-width: 146px; }
+    #videos { padding: 8px; gap: 6px; }
+    #toolbar {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      padding: 7px 8px;
+      gap: 7px;
+    }
+    .device-control {
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-areas: "button" "select" "meter";
+    }
+    .device-control > button, .device-control > select, #screenBtn, #leaveBtn { width: 100%; }
+  }
+</style>
+</head>
+<body>
+  <section id="login">
+    <h1>Party</h1>
+    <p>加入一个语音与屏幕共享房间</p>
+    <input id="room" placeholder="房间名" value="lobby" maxlength="32">
+    <input id="name" placeholder="你的昵称" maxlength="16">
+    <input id="password" type="password" placeholder="访问密码">
+    <button id="joinBtn">进入房间</button>
+    <div id="loginStatus" role="alert"></div>
+  </section>
+
+  <main id="main">
+    <header id="roomHeader">
+      <span class="room-mark">#</span>
+      <span id="roomTitle">lobby</span>
+      <span id="roomCount"></span>
+    </header>
+
+    <div id="workspace">
+      <section id="stage" aria-label="视频舞台">
+        <div id="videos"></div>
+        <div id="emptyStage">
+          <strong>还没有画面</strong>
+          <span>等待该成员开启摄像头或共享屏幕</span>
+        </div>
+      </section>
+
+      <aside id="membersPanel" aria-label="房间成员">
+        <div class="panel-title">房间成员</div>
+        <div id="memberList"></div>
+      </aside>
+    </div>
+
+    <nav id="toolbar" aria-label="媒体控制">
+      <div class="device-control">
+        <button id="micBtn" title="开启或关闭麦克风">麦克风</button>
+        <select id="micSelect" aria-label="选择麦克风"></select>
+        <div id="micMeter" role="meter" aria-label="麦克风音量" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+          <div id="micLevel"></div>
+        </div>
+      </div>
+      <div class="device-control">
+        <button id="camBtn" title="开启或关闭摄像头">摄像头</button>
+        <select id="camSelect" aria-label="选择摄像头"></select>
+      </div>
+      <button id="screenBtn" title="共享当前屏幕">共享屏幕</button>
+      <button id="leaveBtn" title="离开当前房间">离开</button>
+    </nav>
+    <div id="status" role="status"></div>
+  </main>
+
+  <script src="bundle.js"></script>
+</body>
+</html>

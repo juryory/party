@@ -1,0 +1,8 @@
+node_modules
+.worker
+*.log
+.server.pid
+.git
+.agents
+.codex
+npm-debug.log*

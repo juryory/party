@@ -1,0 +1,19 @@
+{
+  "name": "party-share",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/client.js --bundle --minify --outfile=public/bundle.js",
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "mediasoup": "^3.14.0",
+    "ws": "^8.17.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.21.5",
+    "mediasoup-client": "^3.7.6"
+  }
+}
