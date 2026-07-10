@@ -1,8 +1,28 @@
 import crypto from 'crypto';
+import fs from 'fs';
 import http from 'http';
 import express from 'express';
 import { WebSocketServer } from 'ws';
 import * as mediasoup from 'mediasoup';
+
+function loadEnvFile(file = '.env') {
+  if (!fs.existsSync(file)) return;
+  const content = fs.readFileSync(file, 'utf8');
+  for (const line of content.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eq = trimmed.indexOf('=');
+    if (eq === -1) continue;
+    const key = trimmed.slice(0, eq).trim();
+    let value = trimmed.slice(eq + 1).trim();
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+    if (key && process.env[key] === undefined) process.env[key] = value;
+  }
+}
+
+loadEnvFile();
 
 const PORT = Number(process.env.PORT || 8100);
 const BIND = process.env.BIND || '0.0.0.0';
