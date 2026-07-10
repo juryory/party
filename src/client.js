@@ -10,6 +10,7 @@ let recvTransportId = null;
 let myPeerId = null;
 let myName = '玩家';
 let selectedPeerId = 'all';
+let suppressNextCloseStatus = false;
 
 const pending = new Map();
 let reqSeq = 0;
@@ -89,7 +90,13 @@ async function join() {
       ws.onerror = () => reject(new Error('无法连接服务器'));
     });
     ws.onmessage = onMessage;
-    ws.onclose = () => setStatus('与服务器断开连接，请刷新页面重进', true);
+    ws.onclose = () => {
+      if (suppressNextCloseStatus) {
+        suppressNextCloseStatus = false;
+        return;
+      }
+      setStatus('与服务器断开连接，请刷新页面重进', true);
+    };
 
     const info = await request('join', { room: roomName, name: myName, password });
     myPeerId = info.peerId;
@@ -128,6 +135,7 @@ async function join() {
     setStatus(error.message, true);
     $('#joinBtn').disabled = false;
     if (ws) {
+      suppressNextCloseStatus = true;
       try { ws.close(); } catch {}
       ws = null;
     }
