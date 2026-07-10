@@ -5,15 +5,14 @@
   "type": "module",
   "scripts": {
     "build": "esbuild src/client.js --bundle --minify --outfile=public/bundle.js",
+    "postinstall": "npm run build",
     "start": "node server.js"
   },
   "dependencies": {
+    "esbuild": "^0.21.5",
     "express": "^4.19.2",
     "mediasoup": "^3.14.0",
+    "mediasoup-client": "^3.7.6",
     "ws": "^8.17.0"
-  },
-  "devDependencies": {
-    "esbuild": "^0.21.5",
-    "mediasoup-client": "^3.7.6"
   }
 }
